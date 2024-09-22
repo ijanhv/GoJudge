@@ -14,11 +14,12 @@ import (
 )
 
 type Submission struct {
-	Language  string    `json:"language"`
-	Code      string    `json:"code"`
-	Input     string    `json:"input,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Language       string    `json:"language"`
+	Code           string    `json:"code"`
+	Input          string    `json:"input,omitempty"`
+	ExpectedOutput string    `json:"expected_output"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 func main() {
@@ -78,17 +79,13 @@ func worker(ctx context.Context, rdb *redis.Client) {
 }
 
 func processSubmission(submission Submission) {
-	// Here you would implement your code execution logic
-	// This is just a placeholder implementation
-	log.Printf("Processing submission: Language: %s, Code: %s, Input: %s", submission.Language, submission.Code, submission.Input)
 
-	log.Printf("Running code in container...")
-	result, err := docker.RunCodeInContainer(submission.Language, submission.Code, submission.Input)
+	success, result, err := docker.RunCodeInContainer(submission.Language, submission.Code, submission.Input, submission.ExpectedOutput)
 	if err != nil {
 		log.Printf("Error running submission: %v", err)
 		return
 	}
-	log.Printf("Code executed successfully. Result: %s", result)
 
-	log.Printf("Finished processing submission")
+	log.Printf("Code executed successfully. Result: %s Success: %t", result, success)
+
 }

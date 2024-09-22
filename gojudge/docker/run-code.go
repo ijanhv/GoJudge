@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
+	"strings"
 	"time"
-
+	"unicode"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 )
 
-func RunCodeInContainer(language, code, input string) (string, error) {
-
+func RunCodeInContainer(language, code, input, expectedOutput string) (bool, string, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.43"))
-
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
 	var dockerImage string
@@ -25,7 +25,7 @@ func RunCodeInContainer(language, code, input string) (string, error) {
 	switch language {
 	case "python":
 		dockerImage = "python"
-		command = fmt.Sprintf("python -c \"%s\"", code) // Direct execution of Python code
+		command = fmt.Sprintf("python -c \"%s\"", code)
 
 	case "java":
 		dockerImage = "openjdk:11"
@@ -33,17 +33,16 @@ func RunCodeInContainer(language, code, input string) (string, error) {
 
 	case "javascript":
 		dockerImage = "node"
-		command = fmt.Sprintf("node -e \"%s\"", code) // Execute JavaScript with node
+		command = fmt.Sprintf("node -e \"%s\"", code)
 
 	default:
-		return "", err
-
+		return false, "", fmt.Errorf("unsupported language: %s", language)
 	}
 
 	// Ensure the image is pulled
 	err = pullImageIfNotPresent(cli, dockerImage)
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
 	// Create the container
@@ -52,52 +51,48 @@ func RunCodeInContainer(language, code, input string) (string, error) {
 		Cmd:   []string{"sh", "-c", command},
 		Tty:   false,
 	}, &container.HostConfig{
-		NetworkMode:    "none",          // Disable networking
-		CapDrop:        []string{"ALL"}, // Drop all capabilities
-		ReadonlyRootfs: true,            // Enforce read-only filesystem
+		NetworkMode:    "none",
+		CapDrop:        []string{"ALL"},
+		ReadonlyRootfs: true,
 		Resources: container.Resources{
-			Memory:    256 * 1024 * 1024, // 256 MB memory limit
-			CPUShares: 512,               // CPU limit
+			Memory:    256 * 1024 * 1024,
+			CPUShares: 512,
 		},
 	}, nil, nil, "")
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
 
 	if err := cli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
-		return "", nil
+		return false, "", err
 	}
 
-	timeout := 10 * time.Second // Set execution timeout
+	timeout := 10 * time.Second
 	statusCh, errCh := cli.ContainerWait(context.Background(), resp.ID, container.WaitConditionNotRunning)
 
 	select {
 	case err := <-errCh:
 		if err != nil {
-			return "", err
+			return false, "", err
 		}
 	case <-statusCh:
 	case <-time.After(timeout):
 	}
 
-	// Fetch the container logs (this will contain the output of the code execution)
+	// Fetch the container logs
 	out, err := cli.ContainerLogs(context.Background(), resp.ID, container.LogsOptions{ShowStdout: true})
 	if err != nil {
-		return "", err
+		return false, "", err
 	}
-
 	defer out.Close()
 
-	// read the logs
-
 	result := ""
-
 	buf := make([]byte, 1024)
 
 	for {
 		n, err := out.Read(buf)
 		if err != nil && err != io.EOF {
-			return "", err
+			return false, "", err
 		}
 		if n == 0 {
 			break
@@ -105,33 +100,44 @@ func RunCodeInContainer(language, code, input string) (string, error) {
 		result += string(buf[:n])
 	}
 
-	// Stop the container after execution
-
-	stopTimeout := 10 * time.Second           // Use time.Duration for the timeout
-	timeoutSecs := int(stopTimeout.Seconds()) // Convert to int representing seconds
+	// Stop and remove the container
+	stopTimeout := 10 * time.Second
+	timeoutSecs := int(stopTimeout.Seconds())
 
 	if err := cli.ContainerStop(context.Background(), resp.ID, container.StopOptions{Timeout: &timeoutSecs}); err != nil {
-		return "", err
+		return false, "", err
 	}
-	// Remove the container after execution
 	if err := cli.ContainerRemove(context.Background(), resp.ID, container.RemoveOptions{Force: true}); err != nil {
-		return "", err
+		return false, "", err
 	}
 
-	return result, nil
+	log.Printf("Code executed successfully. Result: %s", result)
+
+
+	trimmedResult := strings.TrimSpace(result)
+	trimmedExpectedOutput := strings.TrimSpace(expectedOutput)
+
+	cleanResult := cleanString(trimmedResult)
+	cleanExpected := cleanString(trimmedExpectedOutput)
+	log.Printf("Trimmed Result: %q", trimmedResult)
+	log.Printf("Trimmed Expected: %q", trimmedExpectedOutput)
+	log.Printf("Clean Result: %q", cleanResult)
+	log.Printf("Clean Expected: %q", cleanExpected)
+
+	
+	matches := cleanResult == cleanExpected
+	log.Printf("Code executed successfully. Result: %s Success: %t", cleanResult, matches)
+	return matches, result, nil
 }
 
-func languageExt(language string) string {
-	switch language {
-	case "python":
-		return "py"
-	case "java":
-		return "java"
-	case "javascript":
-		return "js"
-	default:
-		return ""
+func cleanString(input string) string {
+	var output []rune
+	for _, r := range input {
+		if unicode.IsPrint(r) {
+			output = append(output, r)
+		}
 	}
+	return string(output)
 }
 
 // pullImageIfNotPresent pulls the image if it's not available locally
