@@ -1,19 +1,12 @@
 package main
 
 import (
+	"gojudge/db"
 	"gojudge/routes"
-	"log"
-	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
-	router := mux.NewRouter()
+	db.InitDB()
 
-	routes.RegisterRoutes(router)
-
-	log.Println("Server running on port 8001..")
-	log.Fatal(http.ListenAndServe(":8000", router))
-
+	routes.StartServer()
 }
