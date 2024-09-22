@@ -1,3 +1,4 @@
+import React from "react";
 import { Radar } from "lucide-react";
 
 interface SponsorProps {

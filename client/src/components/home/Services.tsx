@@ -1,6 +1,8 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import React from "react";
+import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { MagnifierIcon, WalletIcon, ChartIcon } from "./Icons";
-import cubeLeg from "../assets/cube-leg.png";
+
+import Image from "next/image";
 
 interface ServiceProps {
   title: string;
@@ -65,11 +67,15 @@ export const Services = () => {
           </div>
         </div>
 
-        <img
-          src={cubeLeg}
-          className="w-[300px] md:w-[500px] lg:w-[600px] object-contain"
-          alt="About services"
-        />
+        <div className="w-[300px] md:w-[500px] lg:w-[600px] h-full relative">
+          <Image
+            src="/assets/cube-leg.png"
+            fill
+
+            className="object-contain"
+            alt="About services"
+          />
+        </div>
       </div>
     </section>
   );

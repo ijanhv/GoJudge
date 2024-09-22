@@ -1,21 +1,19 @@
 import React from "react";
-import { Hero } from "@/components/Hero";
-import { Navbar } from "@/components/Navbar";
-import { Sponsors } from "@/components/Sponsors";
-import { About } from "@/components/About";
-import { Features } from "@/components/Features";
-import { HowItWorks } from "@/components/HowItWorks";
-import { Services } from "@/components/Services";
-import { Cta } from "@/components/Cta";
-import { Newsletter } from "@/components/Newsletter";
-import { FAQ } from "@/components/FAQ";
-import { ScrollToTop } from "@/components/ScrollToTop";
+import { Hero } from "@/components/home/Hero";
+import { Sponsors } from "@/components/home/Sponsors";
+import { About } from "@/components/home/About";
+import { Features } from "@/components/home/Features";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { Services } from "@/components/home/Services";
+import { Cta } from "@/components/home/Cta";
+
+import { FAQ } from "@/components/home/FAQ";
+import { ScrollToTop } from "@/components/home/ScrollToTop";
 
 
 export default function Home() {
   return (
     <>
-      <Navbar />
       <Hero />
       <Sponsors />
       <About />
@@ -23,7 +21,7 @@ export default function Home() {
       <Features />
       <Services />
       <Cta />
-      <Newsletter />
+
       <FAQ />
 
       <ScrollToTop />

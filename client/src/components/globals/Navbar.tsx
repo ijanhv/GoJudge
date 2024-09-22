@@ -1,3 +1,5 @@
+"use client"
+import React from "react";
 import { useState } from "react";
 import {
   NavigationMenu,
@@ -13,10 +15,10 @@ import {
 } from "@/components/ui/sheet";
 
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { buttonVariants } from "./ui/button";
+import { buttonVariants } from "../ui/button";
 import { Menu } from "lucide-react";
-import { ModeToggle } from "./mode-toggle";
-import { LogoIcon } from "./Icons";
+import { ModeToggle } from "../mode-toggle";
+import { LogoIcon } from "../home/Icons";
 
 interface RouteProps {
   href: string;
@@ -55,7 +57,7 @@ export const Navbar = () => {
               className="ml-2 font-bold text-xl flex"
             >
               <LogoIcon />
-              ShadcnUI/React
+GoJudge
             </a>
           </NavigationMenuItem>
 

@@ -1,4 +1,6 @@
-import { LogoIcon } from "./Icons";
+import React from "react";
+import { LogoIcon } from "../home/Icons";
+
 
 export const Footer = () => {
   return (

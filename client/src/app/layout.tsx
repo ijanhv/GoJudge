@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/globals/Navbar";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Footer } from "@/components/globals/Footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,12 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {" "}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider defaultTheme="light">
           <Navbar />
           {children}
           <Toaster />
