@@ -8,7 +8,7 @@ function generatePartialBoilerplate(generatorFilePath: string) {
   const boilerplatePath = path.join(
     __dirname,
     generatorFilePath,
-    "boilerplate",
+    "boilerplate"
   );
 
   // Read the input file
@@ -41,7 +41,7 @@ function generateFullBoilerPLate(generatorFilePath: string) {
   const boilerplatePath = path.join(
     __dirname,
     generatorFilePath,
-    "boilerplate-full",
+    "boilerplate-full"
   );
 
   // Read the input file

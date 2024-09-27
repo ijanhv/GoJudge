@@ -9,6 +9,9 @@ import (
 func RegisterRoutes(router *gin.Engine) {
 	router.POST("/api/auth/register", controllers.Register)
     router.POST("/api/auth/login", controllers.Login)
+    router.POST("/api/problems", controllers.CreateProblem)
+    router.GET("/api/problems/:id", controllers.GetProblem) // Add this line
+
     // router.POST("/api/submission", controllers.Submission)
 
     log.Println("Routes registered")

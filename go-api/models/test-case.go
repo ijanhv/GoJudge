@@ -1,12 +1,18 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 
 type TestCase struct {
+	gorm.Model
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	ProblemID uint      `gorm:"not null" json:"problem_id"`
-	Input     string    `gorm:"type:text;not null" json:"input"`
-	Expected  string    `gorm:"type:text;not null" json:"expected"`
+	ProblemID uint      `json:"problem_id"` 
+	Input     string    `json:"input"`
+	Output    string    `json:"output"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
