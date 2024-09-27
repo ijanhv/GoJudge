@@ -1,18 +1,10 @@
 package models
 
-import (
-	"time"
-
-	"gorm.io/gorm"
-)
-
 
 type TestCase struct {
-	gorm.Model
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	ProblemID uint      `json:"problem_id"` 
-	Input     string    `json:"input"`
-	Output    string    `json:"output"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+    BaseModel
+    SubmissionID uint                   `gorm:"not null" json:"submissionId"` // Reference to the submission.
+    ProblemID    uint                   `gorm:"not null" json:"problemId"`     // Reference to the problem.
+    Input        map[string]interface{} `gorm:"type:text;not null" json:"input"`  // Input as a JSON object.
+    Output       interface{}            `gorm:"type:text;not null" json:"output"` // Expected output as a JSON object or array.
 }

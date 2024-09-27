@@ -6,7 +6,6 @@ import (
 	"gojudge/models"
 	"net/http"
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
