@@ -12,7 +12,7 @@ func RegisterRoutes(router *gin.Engine) {
     router.POST("/api/problems", controllers.CreateProblem)
     router.GET("/api/problems/:id", controllers.GetProblem) // Add this line
 
-    // router.POST("/api/submission", controllers.Submission)
+    router.POST("/api/submission", controllers.Submission)
 
     log.Println("Routes registered")
 }

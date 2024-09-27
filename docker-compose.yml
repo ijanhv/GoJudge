@@ -8,9 +8,9 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-defaultpassword}
+    command: redis-server --appendonly yes --requirepass supersecretpassword
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-defaultpassword}
+      - REDIS_PASSWORD=supersecretpassword
     restart: always
 
   postgres:
@@ -23,7 +23,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=supersecretpassword
       - POSTGRES_USER=postgresuser
-      - POSTGRES_DB=postgresdb
+      - POSTGRES_DB="postgresdb"
     restart: always
 
 volumes:

@@ -7,33 +7,31 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
 
-func Submission(w http.ResponseWriter, r *http.Request) {
-
+// Submission handles the submission of a problem solution.
+func Submission(c *gin.Context) {
 	var submission models.Submission
 
-	err := json.NewDecoder(r.Body).Decode(&submission)
-
-	if err != nil {
-		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
+	// Bind JSON input to the Submission struct
+	if err := c.ShouldBindJSON(&submission); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	now := time.Now()
-
 	submission.CreatedAt = now
 	submission.UpdatedAt = now
 
 	submissionJSON, err := json.Marshal(submission)
-
 	if err != nil {
-		http.Error(w, "Error serializing", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error serializing submission"})
 		return
 	}
 
-	// create redis client
+	// Create Redis client
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "supersecretpassword",
@@ -45,11 +43,9 @@ func Submission(w http.ResponseWriter, r *http.Request) {
 	// Add the submission to the queue
 	err = rdb.RPush(ctx, "submission_queue", submissionJSON).Err()
 	if err != nil {
-		http.Error(w, "Error adding submission to queue", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error adding submission to queue"})
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{"status": "Submission queued Successfully!"})
-
+	c.JSON(http.StatusAccepted, gin.H{"status": "Submission queued Successfully!"})
 }
