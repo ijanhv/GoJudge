@@ -7,15 +7,15 @@ import RegisterForm from '@/components/auth/register-form'
 
 const AuthForm = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-green-50">
+    <div className="flex items-center justify-center min-h-screen bg-green-50 dark:bg-background">
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center text-green-700">Welcome to Dotwork</CardTitle>
         <CardDescription className="text-center text-green-600">Log in or create an account</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs className="w-full" defaultValue="login">
+          <TabsList className="grid w-full grid-cols-2" >
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>

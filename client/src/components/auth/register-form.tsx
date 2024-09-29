@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import * as z from "zod";
 import {
@@ -12,8 +13,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { useRegisterQuery } from "@/hooks/use-auth-query";
 
 const RegisterForm = () => {
+  const { mutate, isPending } = useRegisterQuery()
   const registerSchema = z.object({
     username: z
       .string()
@@ -34,7 +37,7 @@ const RegisterForm = () => {
   });
 
   function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
-    console.log(values);
+    mutate(values)
   }
   return (
     <Form {...form}>
@@ -82,6 +85,7 @@ const RegisterForm = () => {
           )}
         />
         <Button
+        disabled={isPending}
           type="submit"
           className="w-full bg-green-600 hover:bg-green-700"
         >

@@ -12,5 +12,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="container  place-items-center py-20 md:py-32 gap-10">{children}</div>;
+  return <div className="">{children}</div>;
 }

@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,8 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useLoginUserQuery } from "@/hooks/use-auth-query";
 
 const LoginForm = () => {
+  const { mutate, isPending } = useLoginUserQuery()
   const loginSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     password: z
@@ -32,7 +35,7 @@ const LoginForm = () => {
   });
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
-
+    mutate(values)
   }
   return (
     <Form {...form}>
@@ -65,6 +68,7 @@ const LoginForm = () => {
         />
 
         <Button
+        disabled={isPending}
           type="submit"
           className="w-full bg-green-600 hover:bg-green-700"
         >

@@ -1,70 +1,113 @@
 package controllers
 
 import (
-	"gojudge/db"
-	"gojudge/models"
-	"net/http"
-	"time"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"gojudge/db"
+	"gojudge/models"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"net/http"
+	"time"
 )
 
 func Register(c *gin.Context) {
-	var input models.User
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Get the email/pass off req Body
+	var body struct {
+		Username string
+		Email    string
+		Password string
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read body",
+		})
+
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	// Hash the password
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to hash password.",
+		})
 		return
 	}
 
-	input.Password = string(hashedPassword)
+	// Create the user
+	user := models.User{Email: body.Email, Password: string(hash), Username: body.Username}
 
-	// Save user in the database
-	if result := db.GetDB().Create(&input); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		return
+	result := db.GetDB().Create(&user)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to create user.",
+		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
+	// Respond
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User Registed in sucessfully",
+		"user": user,
+	})
 }
 
 func Login(c *gin.Context) {
-	var input models.User
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var body struct {
+		Email    string
+		Password string
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
 		return
 	}
 
-	// Fetch user from DB
 	var user models.User
-	if err := db.GetDB().Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	db.GetDB().First(&user, "email = ?", body.Email)
+
+	// Log the user retrieved
+	if user.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// Check password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+	// Log before comparing passwords
+	fmt.Printf("Comparing password for user: %s\n", user.Email)
 
-	// Generate JWT token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte("secret"))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		log.Print(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password "})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	tokenString, err := generateJWT(body.Email)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create token"})
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("token", tokenString, 3600*24*30, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User Logged in sucessfully",
+		"token": tokenString,
+	})
+}
+
+func generateJWT(email string) (string, error) {
+	var jwtSecret = []byte("600bb1042bee6406d8e0409a66fdbd0fc307a4d2c6608edf9ca947f130d684c1") // Change to a secure key
+
+	claims := jwt.MapClaims{
+		"username": email,
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
 }

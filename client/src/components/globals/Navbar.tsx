@@ -84,7 +84,7 @@ export const Navbar = () => {
                   ))}
                   <Link
                     rel="noreferrer noopener"
-                    href="/auth/register"
+                    href="/auth"
                     target="_blank"
                     className={`w-[110px] border ${buttonVariants({
                       variant: "secondary",
@@ -114,7 +114,7 @@ export const Navbar = () => {
 
           <div className="hidden md:flex gap-2 items-center ">
             <Link
-              href="/auth/register"
+              href="/auth"
      
              className="border py-1 hover:border hover:border-primary flex items-center justify-center rounded-full px-5"
             >

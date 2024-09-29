@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/globals/footer";
 import { Navbar } from "@/components/globals/navbar";
+import TanStackProvider from "@/provider/tanstack";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -21,10 +22,12 @@ export default function RootLayout({
       <body>
         {" "}
         <ThemeProvider defaultTheme="light">
-          <Navbar />
-          {children}
-          <Toaster />
-          <Footer />
+          <TanStackProvider>
+            <Navbar />
+            {children}
+            <Toaster />
+            <Footer />
+          </TanStackProvider>
         </ThemeProvider>
       </body>
     </html>

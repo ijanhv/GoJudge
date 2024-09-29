@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { apiUrl } from "@/utils/url";
@@ -18,11 +18,13 @@ export const useLoginUserQuery = () => {
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      toast.success("Logged in successfully", {
-        position: "top-center",
-      });
-      Cookies.set("token", data.data.access_token);
-      router.push("/");
+      if (data.token) {
+        router.push("/problems");
+        toast.success("Logged in successfully", {
+          position: "top-center",
+        });
+        Cookies.set("token", data.token);
+      }
     },
     onError: (error: any) => {
       toast.error("Error, logging in!", {
@@ -33,28 +35,28 @@ export const useLoginUserQuery = () => {
 };
 
 const registerUser = async (data: TRegister) => {
-    const res = await axios.post(`${apiUrl}/api/auth/register`, data);
-    return res.data;
-  };
-  
-  export const useRegisterQuery = () => {
-    const router = useRouter();
-    return useMutation({
-      mutationFn: registerUser,
-      onSuccess: (data) => {
-        toast.success("Registered successfully", {
-          position: "top-center",
-        });
-        Cookies.set("token", data.data.access_token);
-        router.push("/");
-      },
-      onError: (error: any) => {
-        toast.error("Error, logging in!", {
-          position: "top-center",
-        });
-      },
-    });
-  };
+  const res = await axios.post(`${apiUrl}/api/auth/register`, data);
+  return res.data;
+};
+
+export const useRegisterQuery = () => {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: registerUser,
+    onSuccess: (data) => {
+      toast.success("Registered successfully", {
+        position: "top-center",
+      });
+     
+      router.push("/auth");
+    },
+    onError: (error: any) => {
+      toast.error("Error, logging in!", {
+        position: "top-center",
+      });
+    },
+  });
+};
 
 const getAdminDetails = async () => {
   const res = await axios.get(`${apiUrl}/user/token`, {

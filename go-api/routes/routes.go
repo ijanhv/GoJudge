@@ -1,35 +1,48 @@
 package routes
 
 import (
+	"github.com/gin-gonic/gin"
 	"gojudge/controllers"
-    "github.com/gin-gonic/gin"
-    "log"
+	"log"
+	"time"
+
+	"github.com/gin-contrib/cors"
 )
 
 func RegisterRoutes(router *gin.Engine) {
-    // USER ROUTES
+	// USER ROUTES
 	router.POST("/api/auth/register", controllers.Register)
-    router.POST("/api/auth/login", controllers.Login)
+	router.POST("/api/auth/login", controllers.Login)
 
-    // PROBLEMS ROUTES
-    router.POST("/api/problems", controllers.CreateProblem)
-    router.GET("/api/problems", controllers.GetAllProblems)
-    router.GET("/api/problems/:id", controllers.GetProblem) // Add this line
+	// PROBLEMS ROUTES
+	router.POST("/api/problems", controllers.CreateProblem)
+	router.GET("/api/problems", controllers.GetAllProblems)
+	router.GET("/api/problems/:id", controllers.GetProblem) // Add this line
 
-    // SUBMISSION ROUTES
-    router.POST("/api/submission", controllers.Submission)
+	// SUBMISSION ROUTES
+	router.POST("/api/submission", controllers.Submission)
 
-    
-    router.GET("/api/testcase/:id", controllers.GetTestCase)
+	router.GET("/api/testcase/:id", controllers.GetTestCase)
 
-    log.Println("Routes registered")
+	log.Println("Routes registered")
 }
 
 // StartServer initializes the server
 func StartServer() {
-    router := gin.Default()
-    RegisterRoutes(router)
+	router := gin.Default()
 
-    // Start the server
-    log.Fatal(router.Run(":8001")) // Listening on port 8001
+	// Add CORS middleware
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // Add your frontend origin here
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	RegisterRoutes(router)
+
+	// Start the server
+	log.Fatal(router.Run(":8001")) // Listening on port 8001
 }
