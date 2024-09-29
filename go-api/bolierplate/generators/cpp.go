@@ -97,7 +97,6 @@ package generators
 // }
 
 import (
-	"bolierplate/utils"
 	"strings"
 )
 

@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import { Navbar } from "@/components/globals/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Footer } from "@/components/globals/Footer";
+import { Footer } from "@/components/globals/footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",

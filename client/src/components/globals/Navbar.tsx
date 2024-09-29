@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import { useState } from "react";
 import {
@@ -14,11 +14,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { buttonVariants } from "../ui/button";
 import { Menu } from "lucide-react";
 import { ModeToggle } from "../mode-toggle";
 import { LogoIcon } from "../home/Icons";
+import Link from "next/link";
 
 interface RouteProps {
   href: string;
@@ -51,24 +51,21 @@ export const Navbar = () => {
       <NavigationMenu className="mx-auto">
         <NavigationMenuList className="container h-14 px-4 w-screen flex justify-between ">
           <NavigationMenuItem className="font-bold flex">
-            <a
+            <Link
               rel="noreferrer noopener"
               href="/"
               className="ml-2 font-bold text-xl flex"
             >
               <LogoIcon />
-GoJudge
-            </a>
+              GoJudge
+            </Link>
           </NavigationMenuItem>
 
           {/* mobile */}
           <span className="flex md:hidden">
             <ModeToggle />
 
-            <Sheet
-              open={isOpen}
-              onOpenChange={setIsOpen}
-            >
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger className="px-2">
                 <Menu
                   className="flex md:hidden h-5 w-5"
@@ -104,8 +101,8 @@ GoJudge
                       variant: "secondary",
                     })}`}
                   >
-                    <GitHubLogoIcon className="mr-2 w-5 h-5" />
-                    Github
+                   
+                    Register
                   </a>
                 </nav>
               </SheetContent>
@@ -129,15 +126,15 @@ GoJudge
           </nav>
 
           <div className="hidden md:flex gap-2">
-            <a
+            <Link
               rel="noreferrer noopener"
-              href="https://github.com/leoMirandaa/shadcn-landing-page.git"
+              href=""
               target="_blank"
               className={`border ${buttonVariants({ variant: "secondary" })}`}
             >
-              <GitHubLogoIcon className="mr-2 w-5 h-5" />
-              Github
-            </a>
+             
+              Register
+            </Link>
 
             <ModeToggle />
           </div>

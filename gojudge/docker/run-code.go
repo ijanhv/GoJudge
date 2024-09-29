@@ -3,14 +3,14 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/client"
 	"io"
 	"log"
 	"strings"
 	"time"
 	"unicode"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
 )
 
 func RunCodeInContainer(language, code, input, expectedOutput string) (bool, string, error) {
@@ -34,6 +34,7 @@ func RunCodeInContainer(language, code, input, expectedOutput string) (bool, str
 	if err != nil {
 		return false, "", err
 	}
+	log.Printf("ERROR: %s", err)
 
 	if err := cli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
 		return false, "", err
@@ -50,10 +51,12 @@ func RunCodeInContainer(language, code, input, expectedOutput string) (bool, str
 		return false, "", err
 	}
 
-	// Stop and remove the container
-	if err := cleanupContainer(cli, resp.ID); err != nil {
-		return false, "", err
-	}
+	log.Printf("Container Logs:\n%s", result)
+
+	// // Stop and remove the container
+	// if err := cleanupContainer(cli, resp.ID); err != nil {
+	// 	return false, "", err
+	// }
 
 	log.Printf("Code executed successfully. Result: %s", result)
 
@@ -71,12 +74,29 @@ func getDockerImageAndCommand(language, code string) (string, string, error) {
 
 	case "java":
 		dockerImage = "openjdk:11"
-		command = fmt.Sprintf("echo '%s' > Main.java && javac Main.java && java Main", code)
+		command = fmt.Sprintf(`echo '%s' > /tmp/Solution.java && javac /tmp/Solution.java && java -cp /tmp Solution`, strings.ReplaceAll(code, "'", "\\'"))
 
 	case "javascript":
 		dockerImage = "node"
 		command = fmt.Sprintf("node -e \"%s\"", code)
 
+	case "typescript":
+		dockerImage = "node"                               // Specifying a version for consistency
+		escapedCode := strings.ReplaceAll(code, `"`, `\"`) // Escape double quotes
+		command := `sh -c "
+        echo \"console.log('TypeScript compilation starting...');\" > /tmp/code.ts &&
+        echo '%s' >> /tmp/code.ts &&
+        npm install -g typescript &&
+        echo 'TypeScript installed, starting compilation...' &&
+        npx tsc /tmp/code.ts --outFile /tmp/code.js &&
+        echo 'Compilation finished. Contents of /tmp:' &&
+        ls -l /tmp &&
+        echo 'Contents of code.js:' &&
+        cat /tmp/code.js &&
+        echo 'Executing JavaScript:' &&
+        node /tmp/code.js
+    "`
+		command = fmt.Sprintf(command, escapedCode)
 	default:
 		return "", "", fmt.Errorf("unsupported language: %s", language)
 	}
@@ -93,6 +113,10 @@ func createContainer(cli *client.Client, dockerImage, command string) (container
 		NetworkMode:    "none",
 		CapDrop:        []string{"ALL"},
 		ReadonlyRootfs: true,
+
+		Binds: []string{
+			"/tmp:/tmp",
+		},
 		Resources: container.Resources{
 			Memory:    256 * 1024 * 1024,
 			CPUShares: 512,
@@ -120,6 +144,10 @@ func waitForContainer(cli *client.Client, containerID string) error {
 
 // compareOutputs compares the cleaned result with the expected output.
 func compareOutputs(result, expectedOutput string) bool {
+	log.Printf(" Result: %q", result)
+	log.Printf(" Expected Output: %q", expectedOutput)
+	expectedOutput = strings.Trim(expectedOutput, "\"")
+
 	trimmedResult := strings.TrimSpace(result)
 	trimmedExpectedOutput := strings.TrimSpace(expectedOutput)
 
@@ -171,7 +199,6 @@ func fetchContainerLogs(cli *client.Client, containerID string) (string, error) 
 	return cleanedResult, nil
 }
 
-
 // cleanupContainer stops and removes the specified container.
 func cleanupContainer(cli *client.Client, containerID string) error {
 	stopTimeout := 10 * time.Second
@@ -211,20 +238,17 @@ func pullImageIfNotPresent(cli *client.Client, dockerImage string) error {
 	return nil
 }
 
-
 func cleanDockerOutput(output string) string {
-	// Remove ANSI escape codes and non-printable characters
-	output = strings.ReplaceAll(output, "\x1B[0m", "") // Reset
-	output = strings.ReplaceAll(output, "\x1B[1m", "") // Bold
-	output = strings.ReplaceAll(output, "\x1B[2m", "") // Faint
-	output = strings.ReplaceAll(output, "\x1B[3m", "") // Italic
-	output = strings.ReplaceAll(output, "\x1B[4m", "") // Underline
-	output = strings.ReplaceAll(output, "\x1B[5m", "") // Blink
-	output = strings.ReplaceAll(output, "\x1B[7m", "") // Inverse
-	output = strings.ReplaceAll(output, "\x1B[8m", "") // Hidden
-	output = strings.ReplaceAll(output, "\x1B[9m", "") // Strikethrough
+	// Remove ANSI escape codes and special formatting characters
+	ansiEscapeCodes := []string{
+		"\x1B[0m", "\x1B[1m", "\x1B[2m", "\x1B[3m", "\x1B[4m",
+		"\x1B[5m", "\x1B[7m", "\x1B[8m", "\x1B[9m",
+	}
+	for _, code := range ansiEscapeCodes {
+		output = strings.ReplaceAll(output, code, "")
+	}
 
-	// Remove any other unwanted characters (like newlines and special characters)
+	// Remove non-printable characters and keep only visible ones
 	output = strings.Map(func(r rune) rune {
 		if unicode.IsPrint(r) || unicode.IsSpace(r) {
 			return r
@@ -232,5 +256,9 @@ func cleanDockerOutput(output string) string {
 		return -1
 	}, output)
 
+	// Further clean up spaces and special characters
+	output = strings.ReplaceAll(output, "[ ", "[")
+	output = strings.ReplaceAll(output, " ]", "]")
+	output = strings.ReplaceAll(output, ", ", ",")
 	return strings.TrimSpace(output)
 }

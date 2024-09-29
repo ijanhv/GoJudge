@@ -11,11 +11,10 @@ type BaseModel struct {
 }
 type Problem struct {
 	BaseModel
-	Title       string            `gorm:"type:varchar(255);not null" json:"title"`                            // Problem title.
+	Title       string            `gorm:"type:varchar(255);not null" json:"title"` // Problem title.
+	Slug        string            `gorm:"type:varchar(255);not null" json:"slug"`
 	Description string            `gorm:"type:text;not null" json:"description"`                              // Problem description.
 	Difficulty  string            `gorm:"type:varchar(50);not null" json:"difficulty"`                        // Difficulty level (e.g., Easy, Medium, Hard).
-	Tags        []string          `gorm:"type:varchar(255);" json:"tags"`                                     // Tags associated with the problem.
-	Author      string            `gorm:"type:varchar(255);not null" json:"author"`                           // Author of the problem.
 	Function    FunctionSignature `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE;" json:"function"`  // Function signature.
 	TestCases   []TestCase        `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE;" json:"testCases"` // Test cases for the problem.
 }

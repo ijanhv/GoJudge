@@ -112,20 +112,19 @@ func worker(ctx context.Context, rdb *redis.Client) {
 }
 
 func processSubmission(submission Submission) {
-	fmt.Println(submission.Code, submission.Language)
 	// Loop through each test case and inject code one by one
 	for i, testCase := range submission.Problem.TestCases {
 		// Prepare the submission code with a placeholder for test case inputs
-		testCaseCode := generateTestCases(submission.Language, submission.Problem.Function.FunctionName, testCase.Input)
+		testCaseCode := generateTestCases(submission.Language, submission.Problem.Function.FunctionName, testCase.Input, submission.Problem.Function.ReturnType)
 		injectedCode := strings.Replace(submission.Code, "#TEST CASE INPUT#", testCaseCode, 1)
-		fmt.Println(testCaseCode, injectedCode)
+
+		log.Printf(`INJECTED CODE: %s`, injectedCode)
+
 		// Replace input variable placeholders in the injected code
 		for paramName, paramValue := range testCase.Input {
 			inputVarName := fmt.Sprintf("input%d_%s", i, paramName)
 			injectedCode = strings.Replace(injectedCode, inputVarName, formatValue(submission.Language, paramValue), -1)
 		}
-
-		log.Printf("Language: %s, Injected Code for Test Case %d:\n%s", submission.Language, i, injectedCode)
 
 		// Format expected output
 		expectedOutput, err := formatExpectedOutput(testCase.Output)
@@ -142,12 +141,11 @@ func processSubmission(submission Submission) {
 		}
 
 		// Log only the result without additional text
-		fmt.Println(result, success)
+		fmt.Printf(`RESULT: %s, SUCCESS: %t`, result, success)
 	}
 }
 
-func generateTestCases(lang, functionName string, input map[string]interface{}) string {
-	fmt.Println(input)
+func generateTestCases(lang, functionName string, input map[string]interface{}, returnType string) string {
 	var testCode strings.Builder
 
 	// Generate input variable declarations
@@ -157,7 +155,7 @@ func generateTestCases(lang, functionName string, input map[string]interface{}) 
 	}
 
 	// Generate function call
-	functionCall := generateFunctionCall(lang, functionName, strings.Join(getInputVariableNames(input), ", "))
+	functionCall := generateFunctionCall(lang, functionName, strings.Join(getInputVariableNames(input), ", "), returnType)
 	testCode.WriteString(functionCall)
 	testCode.WriteString("\n")
 
@@ -186,82 +184,192 @@ func formatExpectedOutput(output interface{}) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal output: %v", err)
 	}
+	fmt.Println(data)
 	return string(data), nil
 }
-
-func generateVariableDeclaration(lang, type_, name string, value interface{}) string {
+func generateVariableDeclaration(lang, typeName, name string, value interface{}) string {
 	switch lang {
 	case "java":
-		return fmt.Sprintf("%s %s = %s;", type_, name, formatValue(lang, value))
+		return generateJavaVariableDeclaration(typeName, name, value)
 	case "cpp":
-		return fmt.Sprintf("%s %s = %s;", type_, name, formatValue(lang, value))
+		return fmt.Sprintf("%s %s = %s;", typeName, name, formatValue(lang, value))
 	case "javascript":
 		return fmt.Sprintf("const %s = %s;", name, formatValue(lang, value))
 	case "typescript":
-		return fmt.Sprintf("const %s: %s = %s;", name, type_, formatValue(lang, value))
+		return fmt.Sprintf("const %s: %s = %s;", name, typeName, formatValue(lang, value))
 	default:
 		return fmt.Sprintf("let %s = %s;", name, formatValue(lang, value))
 	}
 }
 
-func generateFunctionCall(lang, name, args string) string {
-	return fmt.Sprintf("%s(%s);", name, args)
+func generateJavaVariableDeclaration(typeName, name string, value interface{}) string {
+	switch typeName {
+	case "String[]", "int[]", "long[]", "double[]", "boolean[]", "char[]":
+		return fmt.Sprintf("%s %s = {%s};", typeName, name, formatValue("java", value))
+	default:
+		return fmt.Sprintf("%s %s = %s;", typeName, name, formatValue("java", value))
+	}
 }
 
+func generateFunctionCall(lang, name, args, returnType string) string {
+	switch lang {
+	case "java":
+		if returnType == "arr<int>" {
+			return fmt.Sprintf("int[] result = solution.%s(%s);\nSystem.out.println(Arrays.toString(result));", name, args)
+		}
+		return fmt.Sprintf("int result = solution.%s(%s);\nSystem.out.println(result);", name, args)
+	case "cpp":
+		return fmt.Sprintf("auto result = %s(%s);\nstd::cout << result << std::endl;", name, args)
+	case "javascript":
+		if returnType == "number[]" {
+			return fmt.Sprintf("const result = %s(%s);\nconsole.log(JSON.stringify(result));", name, args)
+		}
+		return fmt.Sprintf("const result = %s(%s);\nconsole.log(result);", name, args)
+
+	case "typescript":
+		if returnType == "arr<int>" {
+			return fmt.Sprintf("const result = %s(%s);\nconsole.log(result);", name, args)
+		}
+		return fmt.Sprintf("const result = %s(%s);\nconsole.log(result);", name, args)
+	default:
+		return fmt.Sprintf("%s(%s);", name, args)
+	}
+}
 func formatValue(lang string, value interface{}) string {
 	switch v := value.(type) {
+	case string:
+		return fmt.Sprintf("%q", v)
 	case []interface{}:
-		elements := make([]string, len(v))
-		for i, elem := range v {
-			elements[i] = fmt.Sprint(elem)
+		return formatSlice(lang, v)
+	case bool:
+		if lang == "java" {
+			return fmt.Sprintf("%t", v)
 		}
-		switch lang {
-		case "java":
-			return fmt.Sprintf("new int[]{%s}", strings.Join(elements, ", "))
-		case "cpp":
-			return fmt.Sprintf("{%s}", strings.Join(elements, ", "))
-		case "javascript", "typescript":
-			return fmt.Sprintf("[%s]", strings.Join(elements, ", "))
-		}
+		return strings.ToLower(fmt.Sprintf("%t", v))
+	default:
+		return fmt.Sprintf("%v", v)
 	}
-	return fmt.Sprint(value)
 }
 
+func formatSlice(lang string, slice []interface{}) string {
+	var formatted []string
+	for _, val := range slice {
+		formatted = append(formatted, formatValue(lang, val))
+	}
+	if lang == "typescript" || lang == "javascript" {
+		return "[" + strings.Join(formatted, ", ") + "]"
+	}
+	return strings.Join(formatted, ", ")
+}
 func getType(lang string, value interface{}) string {
 	switch lang {
 	case "java":
-		switch value.(type) {
-		case []interface{}:
-			return "int[]"
-		case float64:
-			return "int"
-		case string:
-			return "String"
-		case bool:
-			return "boolean"
-		}
+		return getJavaType(value)
 	case "cpp":
-		switch value.(type) {
-		case []interface{}:
-			return "std::vector<int>"
-		case float64:
-			return "int"
-		case string:
-			return "std::string"
-		case bool:
-			return "bool"
-		}
-	case "javascript", "typescript":
-		switch value.(type) {
-		case []interface{}:
-			return "number[]"
-		case float64:
-			return "number"
-		case string:
-			return "string"
-		case bool:
-			return "boolean"
-		}
+		return getCppType(value)
+	case "javascript":
+		return getJSType(value)
+	case "typescript":
+		return getTSType(value)
+	default:
+		return "unknown"
 	}
-	return "unknown"
+}
+func getJavaType(value interface{}) string {
+	switch v := value.(type) {
+	case []interface{}:
+		if len(v) > 0 {
+			switch v[0].(type) {
+			case string:
+				return "String[]"
+			case float64, int:
+				return "int[]"
+			case bool:
+				return "boolean[]"
+			}
+		}
+		return "Object[]"
+	case float64, int:
+		return "int"
+	case string:
+		return "String"
+	case bool:
+		return "boolean"
+	default:
+		return "Object"
+	}
+}
+func getCppType(value interface{}) string {
+	switch v := value.(type) {
+	case []interface{}:
+		if len(v) > 0 {
+			switch v[0].(type) {
+			case float64, int:
+				return "std::vector<int>"
+			case string:
+				return "std::vector<std::string>"
+			case bool:
+				return "std::vector<bool>"
+			}
+		}
+		return "std::vector<void*>"
+	case float64, int:
+		return "int"
+	case string:
+		return "std::string"
+	case bool:
+		return "bool"
+	default:
+		return "auto"
+	}
+}
+
+func getJSType(value interface{}) string {
+	switch v := value.(type) {
+	case []interface{}:
+		if len(v) > 0 {
+			switch v[0].(type) {
+			case float64, int:
+				return "number[]"
+			case string:
+				return "string[]"
+			case bool:
+				return "boolean[]"
+			}
+		}
+		return "any[]"
+	case float64, int:
+		return "number"
+	case string:
+		return "string"
+	case bool:
+		return "boolean"
+	default:
+		return "any"
+	}
+}
+
+func getTSType(value interface{}) string {
+	switch v := value.(type) {
+	case []interface{}:
+		if len(v) > 0 {
+			switch v[0].(type) {
+			case float64, int:
+				return "number[]"
+			case string:
+				return "string[]"
+			case bool:
+				return "boolean[]"
+			}
+		}
+		return "any[]"
+	case float64, int:
+		return "number"
+	case string:
+		return "string"
+	case bool:
+		return "boolean"
+	default:
+		return "any"
+	}
 }

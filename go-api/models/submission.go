@@ -9,7 +9,6 @@ type Submission struct {
 	Problem   Problem    `json:"problem"`
 	Code      string     `json:"code"`
 	Language  string     `json:"language"`
-	TestCases []TestCase `gorm:"foreignKey:SubmissionID;constraint:OnDelete:CASCADE;" json:"testCases"` // Link to TestCase
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }

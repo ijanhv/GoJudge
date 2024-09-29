@@ -91,23 +91,19 @@ func GenerateFullCPlusPlusBoilerplate(problem Problem) string {
 	funcSig += strings.Join(params, ", ") + ") {\n\t// Your code here\n\treturn result ;\n}\n"
 
 	// Constructing the full boilerplate code
-	boilerplate := fmt.Sprintf(`#include <iostream>
+	boilerplate := fmt.Sprintln(`#include <iostream>
 #include <vector>
 #include <string>
 using namespace std;
 
-// Problem: %s
-// Difficulty: %s
+#USER CODE HERE#
 
-
-%s
 
 int main() {
 	#TEST CASE INPUT#
     // Your code to test the function goes here
     return 0;
-}
-`, problem.Title, problem.Difficulty, funcSig)
+}`)
 
 	return boilerplate
 }
@@ -123,14 +119,10 @@ func GenerateFullJavaScriptBoilerplate(problem Problem) string {
 	funcSig += strings.Join(params, ", ") + ") {\n\t // #TEST CASE INPUT# // Your code here\n\treturn result;\n}\n"
 
 	// Constructing the full boilerplate code
-	boilerplate := fmt.Sprintf(`// Problem: %s
-// Difficulty: %s
-
-
-%s
-
+	boilerplate := fmt.Sprintln(`
+#USER CODE HERE#
 // Your code to test the function goes here
-`, problem.Title, problem.Difficulty, funcSig)
+`, problem.Title, problem.Difficulty)
 
 	return boilerplate
 }
@@ -169,19 +161,17 @@ func GenerateFullJavaBoilerplate(problem Problem) string {
 	funcSig += strings.Join(params, ", ") + ") {\n\t// Your code here\n\treturn result;\n}\n"
 
 	// Constructing the full boilerplate code
-	boilerplate := fmt.Sprintf(`// Problem: %s
-// Difficulty: %s
-// Author: %s
+	boilerplate := fmt.Sprintln(`
+import java.util.*;
 
 public class Solution {
-    %s
+    #USER CODE HERE#
 
     public static void main(String[] args) {
 		#TEST CASE INPUT#
         // Your code to test the function goes here
     }
-}
-`, problem.Title, problem.Difficulty, problem.Author, funcSig)
+}`)
 
 	return boilerplate
 }
