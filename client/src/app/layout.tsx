@@ -2,10 +2,9 @@ import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-
-import { Navbar } from "@/components/globals/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/globals/footer";
+import { Navbar } from "@/components/globals/navbar";
 
 export const metadata: Metadata = {
   title: "Create Next App",

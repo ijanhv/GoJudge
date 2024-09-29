@@ -1,11 +1,6 @@
 "use client";
-import React from "react";
-import { useState } from "react";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu";
+import React, { useState } from "react";
+
 import {
   Sheet,
   SheetContent,
@@ -16,9 +11,9 @@ import {
 
 import { buttonVariants } from "../ui/button";
 import { Menu } from "lucide-react";
-import { ModeToggle } from "../mode-toggle";
 import { LogoIcon } from "../home/Icons";
 import Link from "next/link";
+import ThemeToggle from "../mode-toggle";
 
 interface RouteProps {
   href: string;
@@ -47,32 +42,26 @@ const routeList: RouteProps[] = [
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
-    <header className="sticky border-b-[1px] top-0 z-40 w-full bg-white dark:border-b-slate-700 dark:bg-background">
-      <NavigationMenu className="mx-auto">
-        <NavigationMenuList className="container h-14 px-4 w-screen flex justify-between ">
-          <NavigationMenuItem className="font-bold flex">
-            <Link
-              rel="noreferrer noopener"
-              href="/"
-              className="ml-2 font-bold text-xl flex"
-            >
+    <div className="sticky border-b-[1px] top-0 z-40 w-full bg-white dark:border-b-slate-700 dark:bg-background">
+      <div className="mx-auto">
+        <div className="container h-14 px-4 py-3 w-screen flex justify-between ">
+          <div className="font-bold flex">
+            <Link href="/" className="ml-2 font-bold text-xl flex">
               <LogoIcon />
               GoJudge
             </Link>
-          </NavigationMenuItem>
+          </div>
 
           {/* mobile */}
-          <span className="flex md:hidden">
-            <ModeToggle />
+          <div className="flex md:hidden">
+            <ThemeToggle />
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger className="px-2">
                 <Menu
                   className="flex md:hidden h-5 w-5"
                   onClick={() => setIsOpen(true)}
-                >
-                  <span className="sr-only">Menu Icon</span>
-                </Menu>
+                ></Menu>
               </SheetTrigger>
 
               <SheetContent side={"left"}>
@@ -81,7 +70,7 @@ export const Navbar = () => {
                     Shadcn/React
                   </SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col justify-center items-center gap-2 mt-4">
+                <div className="flex flex-col justify-center items-center gap-2 mt-4">
                   {routeList.map(({ href, label }: RouteProps) => (
                     <a
                       rel="noreferrer noopener"
@@ -93,27 +82,25 @@ export const Navbar = () => {
                       {label}
                     </a>
                   ))}
-                  <a
+                  <Link
                     rel="noreferrer noopener"
-                    href="https://github.com/leoMirandaa/shadcn-landing-page.git"
+                    href="/auth/register"
                     target="_blank"
                     className={`w-[110px] border ${buttonVariants({
                       variant: "secondary",
                     })}`}
                   >
-                   
                     Register
-                  </a>
-                </nav>
+                  </Link>
+                </div>
               </SheetContent>
             </Sheet>
-          </span>
+          </div>
 
           {/* desktop */}
-          <nav className="hidden md:flex gap-2">
+          <div className="hidden md:flex gap-2">
             {routeList.map((route: RouteProps, i) => (
-              <a
-                rel="noreferrer noopener"
+              <Link
                 href={route.href}
                 key={i}
                 className={`text-[17px] ${buttonVariants({
@@ -121,25 +108,23 @@ export const Navbar = () => {
                 })}`}
               >
                 {route.label}
-              </a>
+              </Link>
             ))}
-          </nav>
+          </div>
 
-          <div className="hidden md:flex gap-2">
+          <div className="hidden md:flex gap-2 items-center ">
             <Link
-              rel="noreferrer noopener"
-              href=""
-              target="_blank"
-              className={`border ${buttonVariants({ variant: "secondary" })}`}
+              href="/auth/register"
+     
+             className="border py-1 hover:border hover:border-primary flex items-center justify-center rounded-full px-5"
             >
-             
               Register
             </Link>
 
-            <ModeToggle />
+            <ThemeToggle />
           </div>
-        </NavigationMenuList>
-      </NavigationMenu>
-    </header>
+        </div>
+      </div>
+    </div>
   );
 };
