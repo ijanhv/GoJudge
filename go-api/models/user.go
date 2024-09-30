@@ -13,12 +13,3 @@ type User struct {
     UpdatedAt time.Time `json:"updated_at"`
 }
 
-
-// func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
-// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	user.Password = string(hashedPassword)
-// 	return
-// }

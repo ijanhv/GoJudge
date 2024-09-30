@@ -4,10 +4,10 @@ import { LogoIcon } from "../home/Icons";
 
 export const Footer = () => {
   return (
-    <footer id="footer" className="border border-t">
+    <footer id="footer" className="border border-t ">
 
 
-      <section className="container py-20 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-x-12 gap-y-8">
+      <section className="max-w-7xl mx-auto py-20 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-x-12 gap-y-8">
         <div className="col-span-full xl:col-span-2">
           <a
             rel="noreferrer noopener"

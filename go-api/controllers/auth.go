@@ -12,6 +12,15 @@ import (
 	"time"
 )
 
+func GetProfile(c *gin.Context) {
+	user, _ := c.Get("currentUser")
+
+	c.JSON(200, gin.H{
+		"user": user,
+	})
+
+}
+
 func Register(c *gin.Context) {
 	// Get the email/pass off req Body
 	var body struct {
@@ -52,7 +61,7 @@ func Register(c *gin.Context) {
 	// Respond
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User Registed in sucessfully",
-		"user": user,
+		"user":    user,
 	})
 }
 
@@ -86,28 +95,32 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := generateJWT(body.Email)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create token"})
-		return
-	}
+	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":  user.ID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
 
+	token, err := generateToken.SignedString([]byte("600bb1042bee6406d8e0409a66fdbd0fc307a4d2c6608edf9ca947f130d684c1"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
+	}
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("token", tokenString, 3600*24*30, "", "", false, true)
+	c.SetCookie("token", token, 3600*24*30, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User Logged in sucessfully",
-		"token": tokenString,
+		"token":   token,
 	})
 }
 
-func generateJWT(email string) (string, error) {
-	var jwtSecret = []byte("600bb1042bee6406d8e0409a66fdbd0fc307a4d2c6608edf9ca947f130d684c1") // Change to a secure key
+// func generateJWT(id string) (string, error) {
+// 	var jwtSecret = []byte("600bb1042bee6406d8e0409a66fdbd0fc307a4d2c6608edf9ca947f130d684c1") // Change to a secure key
 
-	claims := jwt.MapClaims{
-		"username": email,
-		"exp":      time.Now().Add(time.Hour * 72).Unix(),
-	}
+// 	claims := jwt.MapClaims{
+// 		"id": id,
+// 		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+// 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
-}
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+// 	return token.SignedString(jwtSecret)
+// }

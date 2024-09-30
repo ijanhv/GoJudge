@@ -1,41 +1,78 @@
+//middlewares/checkAuth.go
+
 package middleware
 
 import (
-	"gojudge/utils"
+	"fmt"
+	"gojudge/db"
+	"gojudge/models"
+
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
-// AuthenticationMiddleware checks if the user has a valid JWT token
-func AuthenticationMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        tokenString := c.GetHeader("Authorization")
-        if tokenString == "" {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authentication token"})
-            c.Abort()
-            return
-        }
+func CheckAuth(c *gin.Context) {
 
-        // The token should be prefixed with "Bearer "
-        tokenParts := strings.Split(tokenString, " ")
-        if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token"})
-            c.Abort()
-            return
-        }
+	authHeader := c.GetHeader("Authorization")
 
-        tokenString = tokenParts[1]
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
 
-        claims, err := utils.VerifyToken(tokenString)
-        if err != nil {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token"})
-            c.Abort()
-            return
-        }
+	authToken := strings.Split(authHeader, " ")
+	if len(authToken) != 2 || authToken[0] != "Bearer" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
 
-        c.Set("user_id", claims["user_id"])
-        c.Next()
-    }
+	tokenString := authToken[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("600bb1042bee6406d8e0409a66fdbd0fc307a4d2c6608edf9ca947f130d684c1"), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		c.Abort()
+		return
+	}
+
+	if float64(time.Now().Unix()) > claims["exp"].(float64) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	var user models.User
+    db.GetDB().Omit("password").Where("ID = ?", claims["id"]).Find(&user)
+
+    
+    
+    
+    
+    
+	if user.ID == 0 {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	c.Set("currentUser", user)
+
+	c.Next()
+
 }

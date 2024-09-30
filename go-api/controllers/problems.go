@@ -128,12 +128,16 @@ func GetAllProblems(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, problems)
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Problems Retrieved successfully!",
+		"problems": problems,
+	})
 }
 
 func GetProblem(c *gin.Context) {
-	id := c.Param("id")
+	slug := c.Param("slug")
 
+	fmt.Printf("SLUG: %s", slug)
 	var problem models.Problem
 
 	supabaseUrl := os.Getenv("SUPABASE_URL")
@@ -142,7 +146,7 @@ func GetProblem(c *gin.Context) {
 
 	storageClient := storage_go.NewClient(supabaseUrl, supabaseAnonKey, nil)
 
-	result := db.GetDB().Preload("Function").Preload("Function.Parameters").Preload("TestCases").First(&problem, id)
+    result := db.GetDB().Preload("Function").Preload("Function.Parameters").Preload("TestCases").Where("slug = ?", slug).First(&problem)
 
 	if result.Error != nil {
 
@@ -167,9 +171,9 @@ func GetProblem(c *gin.Context) {
 	}
 
 	response := gin.H{
-		"message": "Problem Retrieved successfully!",
+		"message":     "Problem Retrieved successfully!",
 		"problem":     problem,
-		"bolierplate": fileContents,
+		"boilerplate": fileContents,
 	}
 
 	c.JSON(http.StatusOK, response)

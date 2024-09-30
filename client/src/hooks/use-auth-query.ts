@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,11 +14,15 @@ const loginUser = async (data: TLogin) => {
 };
 
 export const useLoginUserQuery = () => {
+  const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
+      router.refresh();
       if (data.token) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+
         router.push("/problems");
         toast.success("Logged in successfully", {
           position: "top-center",
@@ -47,7 +51,7 @@ export const useRegisterQuery = () => {
       toast.success("Registered successfully", {
         position: "top-center",
       });
-     
+
       router.push("/auth");
     },
     onError: (error: any) => {
@@ -58,8 +62,8 @@ export const useRegisterQuery = () => {
   });
 };
 
-const getAdminDetails = async () => {
-  const res = await axios.get(`${apiUrl}/user/token`, {
+const getProfileDetails = async () => {
+  const res = await axios.get(`${apiUrl}/api/user/profile`, {
     headers: {
       Authorization: `Bearer ${Cookies.get("token")}`,
     },
@@ -68,10 +72,10 @@ const getAdminDetails = async () => {
   return res.data.user;
 };
 
-export const useGetAdminDetailsQuery = () => {
+export const useGetProfileDetailsQuery = () => {
   return useQuery({
-    queryKey: ["admin"],
-    queryFn: getAdminDetails,
+    queryKey: ["profile"],
+    queryFn: getProfileDetails,
     staleTime: Infinity,
   });
 };

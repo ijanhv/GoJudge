@@ -21,7 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {" "}
-        <ThemeProvider defaultTheme="light">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
           <TanStackProvider>
             <Navbar />
             {children}
