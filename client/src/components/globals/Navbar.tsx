@@ -56,23 +56,9 @@ export const Navbar = () => {
           </Link>
         </div>
 
-        {/* mobile */}
-        <div className="flex md:hidden"></div>
 
-        {/* desktop */}
-        {/* <div className="hidden md:flex gap-2">
-          {routeList.map((route: RouteProps, i) => (
-            <Link
-              href={route.href}
-              key={i}
-              className={`text-[17px] ${buttonVariants({
-                variant: "ghost",
-              })}`}
-            >
-              {route.label}
-            </Link>
-          ))}
-        </div> */}
+
+  
 
         <div className="flex gap-2 items-center ">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

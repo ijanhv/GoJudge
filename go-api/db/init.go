@@ -1,7 +1,11 @@
 package db
 
 import (
+	// "gojudge/models"
+	// "log"
 
+	"gojudge/models"
+	"log"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,12 +21,12 @@ func InitDB() {
 	}
 	db = database
 
-	// Run migrations
-	// if err := db.Debug().AutoMigrate(&models.User{}, &models.Problem{}, &models.BaseModel{}, &models.FunctionSignature{}, &models.Parameter{}, &models.Submission{}, &models.TestCase{}); err != nil {
-	// log.Fatalf("Migration failed: %v", err)
-	// } else {
-	//     log.Println("Migrations ran successfully")
-	// }
+	// // Run migrations
+	if err := db.Debug().AutoMigrate(&models.User{}, &models.Problem{}, &models.BaseModel{}, &models.FunctionSignature{}, &models.Parameter{}, &models.Submission{}, &models.TestCase{}, &models.TestResult{}); err != nil {
+	log.Fatalf("Migration failed: %v", err)
+	} else {
+	    log.Println("Migrations ran successfully")
+	}
 
 }
 

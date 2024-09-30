@@ -1,10 +1,13 @@
 import ProblemsList from "@/components/problems/list";
-import React from "react";
+import React, { Suspense } from "react";
 
 const ProblemsPage = () => {
   return (
     <div>
-     <ProblemsList />
+      <Suspense>
+      <ProblemsList />
+      </Suspense>
+
     </div>
   );
 };

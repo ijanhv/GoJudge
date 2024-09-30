@@ -23,7 +23,8 @@ func RegisterRoutes(router *gin.Engine) {
 	router.GET("/api/problems/:slug", controllers.GetProblem) // Add this line
 
 	// SUBMISSION ROUTES
-	router.POST("/api/submission", controllers.Submission)
+	router.POST("/api/submission", controllers.CreateSubmission)
+	router.PATCH("/api/submission/:id", controllers.UpdateSubmission)
 
 	router.GET("/api/testcase/:id", controllers.GetTestCase)
 

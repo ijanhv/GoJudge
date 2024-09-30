@@ -1,13 +1,12 @@
-import React from 'react'
+import React from "react";
 import Cookies from "js-cookie";
-import User from './user';
-import Link from 'next/link';
+import User from "./user";
+import Link from "next/link";
 
 const Check = () => {
   return (
     <>
-
-    {Cookies.get("token") ? (
+      {Cookies.get("token") ? (
         <User />
       ) : (
         <Link
@@ -17,8 +16,8 @@ const Check = () => {
           Register
         </Link>
       )}
-          </>
-  )
-}
+    </>
+  );
+};
 
-export default Check
+export default Check;

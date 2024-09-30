@@ -17,6 +17,8 @@ type Problem struct {
 	Difficulty  string            `gorm:"type:varchar(50);not null" json:"difficulty"`                        // Difficulty level (e.g., Easy, Medium, Hard).
 	Function    FunctionSignature `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE;" json:"function"`  // Function signature.
 	TestCases   []TestCase        `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE;" json:"testCases"` // Test cases for the problem.
+	Submissions []Submission      `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE;" json:"submissions"` // List of submissions related to the problem.
+
 }
 
 // FunctionSignature represents the function signature for a problem.

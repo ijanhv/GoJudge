@@ -17,7 +17,7 @@ func GenerateCPlusPlusBoilerplate(problem models.Problem) string {
 	funcSig += strings.Join(params, ", ") + ") {\n\t// Your code here\n\treturn result ;\n}\n"
 
 	return fmt.Sprintf("// Problem: %s\n// Difficulty: %s\n\n%s\n",
-		problem.Title, problem.Difficulty,  funcSig)
+		problem.Title, problem.Difficulty, funcSig)
 }
 
 // GenerateJavaScriptBoilerplate generates JavaScript boilerplate code for the solution.
@@ -31,7 +31,7 @@ func GenerateJavaScriptBoilerplate(problem models.Problem) string {
 	funcSig += strings.Join(params, ", ") + ") {\n\t// Your code here\n\treturn result;\n}\n"
 
 	return fmt.Sprintf("// Problem: %s\n// Difficulty: %s\n// \n%s\n",
-		problem.Title, problem.Difficulty,  funcSig)
+		problem.Title, problem.Difficulty, funcSig)
 }
 
 // GenerateJavaBoilerplate generates Java boilerplate code for the solution.
@@ -48,9 +48,8 @@ func GenerateJavaBoilerplate(problem models.Problem) string {
 	boilerplate := fmt.Sprintf(`// Problem: %s
 // Difficulty: %s
 
-public class Solution {
     %s
-}
+
 `, problem.Title, problem.Difficulty, funcSig)
 
 	return boilerplate

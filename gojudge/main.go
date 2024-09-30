@@ -174,7 +174,7 @@ func formatInput(input map[string]interface{}) string {
 	data, err := json.Marshal(input)
 	if err != nil {
 		log.Printf("Error marshalling input: %v", err)
-		return "{}" // Return an empty JSON object on error
+		return "{}"
 	}
 	return string(data)
 }
