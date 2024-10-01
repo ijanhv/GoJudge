@@ -3,14 +3,17 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
 	"io"
 	"log"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/client"
 )
 
 func RunCodeInContainer(language, code, input, expectedOutput string) (bool, string, error) {
@@ -29,8 +32,10 @@ func RunCodeInContainer(language, code, input, expectedOutput string) (bool, str
 		return false, "", err
 	}
 
+	volumeName := fmt.Sprintf("code_volume_%s", generateUniqueID())
+
 	// Create and start the container
-	resp, err := createContainer(cli, dockerImage, command)
+	resp, err := createContainer(cli, dockerImage, command, volumeName)
 	if err != nil {
 		return false, "", err
 	}
@@ -53,10 +58,10 @@ func RunCodeInContainer(language, code, input, expectedOutput string) (bool, str
 
 	log.Printf("Container Logs:\n%s", result)
 
-	// // Stop and remove the container
-	// if err := cleanupContainer(cli, resp.ID); err != nil {
-	// 	return false, "", err
-	// }
+	// Stop and remove the container
+	if err := cleanupContainer(cli, resp.ID); err != nil {
+		return false, "", err
+	}
 
 	log.Printf("Code executed successfully. Result: %s", result)
 
@@ -72,39 +77,46 @@ func getDockerImageAndCommand(language, code string) (string, string, error) {
 		dockerImage = "python"
 		command = fmt.Sprintf("python -c \"%s\"", code)
 
+	case "cpp", "c++":
+		dockerImage = "gcc"
+		command = fmt.Sprintf("echo \"%s\" > /code/main.cpp && g++ /code/main.cpp -o /code/main && /code/main", code)
+
 	case "java":
 		dockerImage = "openjdk:11"
-		command = fmt.Sprintf(`echo '%s' > /tmp/Solution.java && javac /tmp/Solution.java && java -cp /tmp Solution`, strings.ReplaceAll(code, "'", "\\'"))
+		command = fmt.Sprintf(`echo '%s' > /code/Solution.java && javac /code/Solution.java && java -cp /code Solution`, strings.ReplaceAll(code, "'", "\\'"))
 
 	case "javascript":
 		dockerImage = "node"
 		command = fmt.Sprintf("node -e \"%s\"", code)
 
 	case "typescript":
-		dockerImage = "node"                               // Specifying a version for consistency
-		escapedCode := strings.ReplaceAll(code, `"`, `\"`) // Escape double quotes
-		command := `sh -c "
-        echo \"console.log('TypeScript compilation starting...');\" > /tmp/code.ts &&
-        echo '%s' >> /tmp/code.ts &&
-        npm install -g typescript &&
-        echo 'TypeScript installed, starting compilation...' &&
-        npx tsc /tmp/code.ts --outFile /tmp/code.js &&
-        echo 'Compilation finished. Contents of /tmp:' &&
-        ls -l /tmp &&
-        echo 'Contents of code.js:' &&
-        cat /tmp/code.js &&
-        echo 'Executing JavaScript:' &&
-        node /tmp/code.js
-    "`
-		command = fmt.Sprintf(command, escapedCode)
+		dockerImage = "node"
+		escapedCode := strings.ReplaceAll(code, `"`, `\"`)
+		command = fmt.Sprintf(`echo "%s" > /code/code.ts && npm install -g typescript && npx tsc /code/code.ts --outFile /code/code.js && node /code/code.js`, escapedCode)
+
 	default:
 		return "", "", fmt.Errorf("unsupported language: %s", language)
 	}
+
 	return dockerImage, command, nil
 }
 
 // createContainer creates a Docker container with the specified image and command.
-func createContainer(cli *client.Client, dockerImage, command string) (container.CreateResponse, error) {
+func createContainer(cli *client.Client, dockerImage, command, volumeName string) (container.CreateResponse, error) {
+
+	_, err := cli.VolumeCreate(context.Background(), volume.CreateOptions{
+		Name: volumeName,
+	})
+	if err != nil {
+		return container.CreateResponse{}, fmt.Errorf("error creating volume: %v", err)
+	}
+
+	// Mount the volume
+	volumeMount := mount.Mount{
+		Type:   mount.TypeVolume,
+		Source: volumeName,
+		Target: "/code",
+	}
 	return cli.ContainerCreate(context.Background(), &container.Config{
 		Image: dockerImage,
 		Cmd:   []string{"sh", "-c", command},
@@ -113,9 +125,9 @@ func createContainer(cli *client.Client, dockerImage, command string) (container
 		NetworkMode:    "none",
 		CapDrop:        []string{"ALL"},
 		ReadonlyRootfs: true,
-
-		Binds: []string{
-			"/tmp:/tmp",
+		Mounts:         []mount.Mount{volumeMount},
+		Tmpfs: map[string]string{
+			"/tmp": "rw,noexec,nosuid,size=64m",
 		},
 		Resources: container.Resources{
 			Memory:    256 * 1024 * 1024,
@@ -196,6 +208,7 @@ func fetchContainerLogs(cli *client.Client, containerID string) (string, error) 
 	}
 
 	cleanedResult := cleanDockerOutput(result.String())
+	fmt.Printf("Container Logs: %s", cleanedResult)
 	return cleanedResult, nil
 }
 
@@ -261,4 +274,8 @@ func cleanDockerOutput(output string) string {
 	output = strings.ReplaceAll(output, " ]", "]")
 	output = strings.ReplaceAll(output, ", ", ",")
 	return strings.TrimSpace(output)
+}
+
+func generateUniqueID() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
 }

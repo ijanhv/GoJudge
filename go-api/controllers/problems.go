@@ -7,15 +7,11 @@ import (
 	"gojudge/generator"
 	"gojudge/models"
 	"log"
-
 	"net/http"
 	"os"
 	"path/filepath"
-
 	"github.com/gosimple/slug"
-
 	storage_go "github.com/supabase-community/storage-go"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -146,7 +142,7 @@ func GetProblem(c *gin.Context) {
 
 	storageClient := storage_go.NewClient(supabaseUrl, supabaseAnonKey, nil)
 
-    result := db.GetDB().Preload("Function").Preload("Function.Parameters").Preload("TestCases").Where("slug = ?", slug).First(&problem)
+	result := db.GetDB().Preload("Function").Preload("Function.Parameters").Preload("TestCases").Where("slug = ?", slug).First(&problem)
 
 	if result.Error != nil {
 

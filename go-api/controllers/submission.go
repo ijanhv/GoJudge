@@ -3,11 +3,8 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-
 	"fmt"
-
 	"github.com/gin-gonic/gin"
-
 	"gojudge/db"
 	"gojudge/generator"
 	"gojudge/models"
@@ -34,6 +31,11 @@ func GetBoilerplate(language string) (string, error) {
 // Submission handles the submission of a problem solution.
 func CreateSubmission(c *gin.Context) {
 	var submission models.Submission
+
+	user, _ := c.Get("currentUser")
+
+	submission.UserID = user.(models.User).ID 
+
 
 	// Bind JSON input to the Submission struct
 	if err := c.ShouldBindJSON(&submission); err != nil {
@@ -104,7 +106,7 @@ func CreateSubmission(c *gin.Context) {
 }
 
 func UpdateSubmission(c *gin.Context) {
-	submissionID := c.Param("id") // Get the submission ID from the URL parameters
+	submissionID := c.Param("id")
 
 	// Create a struct to hold the fields that can be updated
 	var updateData struct {
@@ -147,4 +149,51 @@ func UpdateSubmission(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "Submission updated successfully!", "submission": existingSubmission})
+}
+
+func GetResults(c *gin.Context) {
+	submissionID := c.Param("id")
+	fmt.Printf("Submission ID: %s\n", submissionID)
+
+	// Bind the incoming JSON array to a slice of TestResult structs
+	var results []models.TestResult
+	if err := c.ShouldBindJSON(&results); err != nil {
+		fmt.Printf("ERROR BIND: %s\n", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Printf("Received Results: %+v\n", results)
+
+	// Fetch the existing submission from the database
+	var existingSubmission models.Submission
+	if err := db.GetDB().Where("id = ?", submissionID).Preload("TestResults").First(&existingSubmission).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
+		return
+	}
+
+	fmt.Printf("Existing Submission: %+v\n", existingSubmission)
+
+	for _, result := range results {
+		var existingTestResult models.TestResult
+		if err := db.GetDB().Where("submission_id = ? AND test_case_id = ?", result.SubmissionID, result.TestCaseID).First(&existingTestResult).Error; err != nil {
+			fmt.Printf("Test result not found for submissionID: %d, testCaseId: %d\n", result.SubmissionID, result.TestCaseID)
+			continue
+		}
+
+		// Update the fields of the existing test result
+		existingTestResult.Status = result.Status
+		existingTestResult.Output = result.Output
+		existingTestResult.ErrorMessage = result.ErrorMessage
+
+		// Save the updated test result back to the database
+		if err := db.GetDB().Save(&existingTestResult).Error; err != nil {
+			fmt.Printf("Error updating test result: %s\n", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating test result"})
+			return
+		}
+
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "Test results updated successfully!"})
 }
