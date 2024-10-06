@@ -1,6 +1,6 @@
-# 🏛️ goJudge
+# 🏛️ GoJudge
 
-goJudge is a comprehensive online judge system designed to facilitate coding problem-solving and evaluation. This project encompasses various components working together to provide a seamless experience for both problem creators and solvers.
+GoJudge is a comprehensive online judge system designed to facilitate coding problem-solving and evaluation. This project encompasses various components working together to provide a seamless experience for both problem creators and solvers.
 
 ## 📚 Table of Contents
 
@@ -13,8 +13,6 @@ goJudge is a comprehensive online judge system designed to facilitate coding pro
   - [🌐 Frontend](#-frontend)
 - [🔄 Workflow](#-workflow)
 - [🚀 Getting Started](#-getting-started)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
 
 ## ✨ Features
 
@@ -80,10 +78,10 @@ Key features:
 
 The frontend is the face of goJudge, built using Next.js, TypeScript, and shadcn/ui. It provides:
 
-- 👨‍💻 User interface for problem solving and submission
-- 🔄 Real-time updates on submission status using React Query
-- 🎨 Sleek and responsive design using shadcn/ui
-- 👑 Problem creation interface for administrators
+- User interface for problem solving and submission
+- Real-time updates on submission status using React Query
+- Sleek and responsive design using shadcn/ui
+- Problem creation interface for administrators
 
 Key features:
 - Type-safe development with TypeScript
@@ -93,7 +91,7 @@ Key features:
 
 ## 🔄 Workflow
 
-1. **Problem Creation** 📝:
+1. **Problem Creation**:
    - Admin creates a problem, specifying:
      - Function name
      - Parameters
@@ -102,20 +100,20 @@ Key features:
    - System generates boilerplate code for supported languages
    - Boilerplate code is stored in Amazon S3 for quick access
 
-2. **Problem Solving** 🧠:
+2. **Problem Solving**:
    - User browses and selects a problem to solve
    - System fetches appropriate boilerplate code from S3
    - User writes their solution using the provided boilerplate
    - User submits their solution for evaluation
 
-3. **Submission Processing** ⚙️:
+3. **Submission Processing**:
    - Submitted code is added to the Redis queue for processing
    - GoJudge Worker picks up the submission from the queue
    - Worker generates test cases based on problem specifications
    - Test cases are injected into the submitted code
    - Code is executed in an isolated Docker environment based on the specific language for security
 
-4. **Result Handling** 📊:
+4. **Result Handling**:
    - Worker analyzes execution results and determines correctness
    - Results are sent back to the API server via webhook
    - API server updates the submission status (Accepted/Rejected)
