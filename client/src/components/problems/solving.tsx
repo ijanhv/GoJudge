@@ -15,11 +15,23 @@ import Link from "next/link";
 import { useGetProblemQuery } from "@/hooks/use-problems-query";
 import Loader from "../common/loader";
 import Error from "../common/error";
-import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
+import Submission from "./submission";
+import { useSubmitCodequery } from "@/hooks/use-submission-query";
+
+const Editor = dynamic(() => import("@monaco-editor/react"), {
+  loading: () => <p>Loading...</p>,
+});
 
 const ProblemSolving = ({ slug }: { slug: string }) => {
+  const searchParams = useSearchParams();
+
+  const submisssionId = searchParams.get("id")
   const { data, isPending, isError } = useGetProblemQuery(slug);
+
+  const { mutate, isPending: isSubmitting } = useSubmitCodequery();
   const { theme } = useTheme();
 
   const [selectedLanguage, setSelectedLanguage] = useState("problem.js");
@@ -36,7 +48,15 @@ const ProblemSolving = ({ slug }: { slug: string }) => {
   if (isPending) return <Loader />;
   if (isError) return <Error />;
 
-  const handleRunCode = () => {};
+  const handleRunCode = () => {
+    if (code && data) {
+      mutate({
+        code,
+        problemId: data?.id as number,
+        language: getMonacoLanguage(selectedLanguage),
+      });
+    }
+  };
 
   const getMonacoLanguage = (lang: string) => {
     switch (lang) {
@@ -130,9 +150,15 @@ const ProblemSolving = ({ slug }: { slug: string }) => {
               onChange={(value) => setCode(value)}
               defaultLanguage="javascript"
             />
+
+            {submisssionId && <Submission id={Number(submisssionId)} />}
           </TabsContent>
         </Tabs>
-        <Button className="mt-4" onClick={handleRunCode}>
+        <Button
+          disabled={isPending || isSubmitting}
+          className="mt-4"
+          onClick={() => handleRunCode()}
+        >
           <PlayCircle className="w-4 h-4 mr-2" />
           Run Code
         </Button>

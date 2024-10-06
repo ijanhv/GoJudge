@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   redis:
@@ -11,19 +11,6 @@ services:
     command: redis-server --appendonly yes --requirepass supersecretpassword
     environment:
       - REDIS_PASSWORD=supersecretpassword
-    restart: always
-
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=supersecretpassword
-      - POSTGRES_USER=postgresuser
-      - POSTGRES_DB="postgresdb"
     restart: always
 
 volumes:

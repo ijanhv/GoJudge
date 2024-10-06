@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useGetProfileDetailsQuery } from "@/hooks/use-auth-query";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +12,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { deleteCookie, getCookie } from "cookies-next";
 
 const User = () => {
-    const router = useRouter()
+  const router = useRouter();
   const { data, isPending, isError } = useGetProfileDetailsQuery();
 
   if (isPending) return <></>;
   if (isError) return <Login />;
-  if (data && Cookies.get("token"))
+
+  if (!data)
+    return (
+      <Link
+        href="/auth"
+        className="border py-1 hover:border hover:border-primary flex items-center justify-center rounded-full px-5"
+      >
+        Login
+      </Link>
+    );
+  if (data && getCookie("token"))
     return (
       <DropdownMenu>
         <DropdownMenuTrigger>
@@ -35,11 +45,9 @@ const User = () => {
           <DropdownMenuItem>{data.email}</DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-                Cookies.remove("token")
-                router.refresh()
-            }
-           
-            }
+              deleteCookie("token");
+              router.refresh();
+            }}
             className="flex items-center gap-3"
           >
             Logout
@@ -54,14 +62,14 @@ export default User;
 
 const Login = () => {
   useEffect(() => {
-    Cookies.remove("token");
+    deleteCookie("token");
   }, []);
   return (
     <Link
       href="/auth"
       className="border py-1 hover:border hover:border-primary flex items-center justify-center rounded-full px-5"
     >
-      Register
+      Login
     </Link>
   );
 };

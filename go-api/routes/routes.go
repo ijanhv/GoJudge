@@ -24,6 +24,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// SUBMISSION ROUTES
 	router.POST("/api/submission", middleware.CheckAuth, controllers.CreateSubmission)
+	router.GET("/api/submission/:id", controllers.GetSubmission)
 	router.PATCH("/api/submission/:id", controllers.UpdateSubmission)
 	router.POST("/api/submission/:id/results", controllers.GetResults)
 

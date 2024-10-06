@@ -10,7 +10,7 @@ const AuthForm = () => {
     <div className="flex items-center justify-center min-h-screen bg-green-50 dark:bg-background">
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-green-700">Welcome to Dotwork</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center text-green-700">Welcome to GoJudge</CardTitle>
         <CardDescription className="text-center text-green-600">Log in or create an account</CardDescription>
       </CardHeader>
       <CardContent>

@@ -32,6 +32,7 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cookies-next": "^4.2.1",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.446.0",
     "monaco-editor": "^0.52.0",

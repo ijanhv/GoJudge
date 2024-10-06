@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState } from "react";
+import React, {  useState } from "react";
 
 import {
   Sheet,
@@ -9,16 +9,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import dynamic from "next/dynamic";
 import { buttonVariants } from "../ui/button";
 import { Menu } from "lucide-react";
 import { LogoIcon } from "../home/Icons";
 import Link from "next/link";
 import ThemeToggle from "../mode-toggle";
+import Check from "./check";
 
-const Check = dynamic(() => import("@/components/globals/check"), {
-  loading: () => <p>Loading...</p>,
-});
+
 
 interface RouteProps {
   href: string;
@@ -56,17 +54,13 @@ export const Navbar = () => {
           </Link>
         </div>
 
-
-
-  
-
         <div className="flex gap-2 items-center ">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger className="px-2">
               <Menu
                 className="flex md:hidden h-5 w-5"
                 onClick={() => setIsOpen(true)}
-              ></Menu>
+              />
             </SheetTrigger>
 
             <SheetContent side={"left"}>
@@ -90,9 +84,9 @@ export const Navbar = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Suspense fallback={<div>Loading..</div>}>
+          {/* <Suspense fallback={<div>Loading..</div>}> */}
             <Check />
-          </Suspense>
+          {/* </Suspense> */}
 
           <ThemeToggle />
         </div>

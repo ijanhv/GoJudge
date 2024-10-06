@@ -61,3 +61,46 @@ interface TProblemData {
   function: FunctionDetails;
   testCases: TestCase[];
 }
+
+
+// {
+//   "problemId": 31,
+//   "userId": 8,
+//   "language": "cpp",
+//   "code": "int sum(int a, int b) {\n    return a + b;\n    \n}"
+
+// }
+
+
+interface TCodeSubmission {
+  problemId: number,
+  language: string;
+  code: string
+}
+
+interface TSubmission {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  problemId: number;
+  problem: Problem;
+  userId: number;
+  testResults: TestResult[];
+  submissionTime: string;
+  status: 'pending' | 'success' | 'failure';
+  errorMessage: string;
+  language: string;
+  code: string;
+}
+
+
+interface TestResult {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  submissionId: number;
+  testCaseId: number;
+  status: 'success' | 'failure';
+  output: string;
+  errorMessage: string;
+}
