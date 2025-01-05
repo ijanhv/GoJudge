@@ -89,6 +89,9 @@ Key features:
 - Customizable UI components using shadcn/ui
 - Real-time updates using Polling
 
+## 🔄 Architecture
+![image](https://github.com/user-attachments/assets/f7e7acea-9e4a-4279-843b-5f51040260d5)
+
 ## 🔄 Workflow
 
 1. **Problem Creation**:
